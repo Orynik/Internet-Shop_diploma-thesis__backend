@@ -1,0 +1,30 @@
+{
+  "name": "internet-shop__diploma-thesis_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --ext js --watch src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Orynik/Internet-Shop_diploma-thesis__backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Orynik/Internet-Shop_diploma-thesis__backend/issues"
+  },
+  "homepage": "https://github.com/Orynik/Internet-Shop_diploma-thesis__backend#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "mysql2": "^2.2.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
