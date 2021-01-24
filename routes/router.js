@@ -9,39 +9,70 @@ const directoryToSaveImagesProducts = `/home/orynik/Desktop/Projects/Internet-Sh
 router.get('/',  async (req,res) => {
   res.send([
     {
-    
     }
   ])
 })
 
+//RESTful Serials table
+
 router.get('/serials',  async (req,res) => {
-  database.query('select Serial from Serials',function(err,result,fields){
+
+  if(req.query.id > 0 && req.query.id != undefined){
+    database.query(`select id,Serial from Serials where id = '${req.query.id}'`,function(err,result,fields){
+      if (err) throw new Error(err)
+
+      res.send(JSON.stringify(result))
+    })
+  }else{
+    database.query('select id,Serial from Serials',function(err,result,fields){
+      if (err) throw new Error(err)
+
+      res.send(JSON.stringify(result))
+    })
+  }
+
+})
+
+router.post('/serials',  async (req,res) => {
+  database.query(`insert into Serials(serial) values ('${req.body.Serial}')`,function(err,result,fields){
     if (err) throw new Error(err)
 
-    const requestData = JSON.stringify(result)
-
-    res.send(requestData)
+    res.sendStatus(201)
   })
 })
 
-router.get('/serials',  async (req,res) => {
-  database.query('select Serial from Serials',function(err,result,fields){
+router.put('/serials', async (req,res) =>{
+  database.query(`update serials set Serial = '${req.body.Serial}' where id = '${req.body.id}'`, function(err,result,fields){
     if (err) throw new Error(err)
 
-    const requestData = JSON.stringify(result)
+    res.sendStatus(200)
+  })
+})
 
-    res.send(requestData)
+router.delete('/serials', async (req,res) =>{
+  database.query(`delete from Serials where id = '${req.query.id}'`, function(err,result,fields){
+    if (err) throw new Error(err)
+
+    res.sendStatus(204)
   })
 })
 
 router.get('/manufacturers',  async (req,res) => {
-  database.query('select Company,Location,Number from Manufacturers',function(err,result,fields){
+  database.query('select Company,Location,Number from Man ufacturers',function(err,result,fields){
     if (err) throw new Error(err)
 
     const requestData = JSON.stringify(result)
 
     res.send(requestData)
   })
+})
+
+router.post('/manufacturers',  async (req,res) => {
+  database.query(`insert into manufacturers(Company,Location,Number) values ('${req.body.Company}','${req.body.Location}','${req.body.Number}')`,function(err,result,fields){
+    if (err) throw new Error(err)
+    console.log(result)
+  })
+
 })
 
 router.get('/motors',  async (req,res) => {
@@ -82,9 +113,8 @@ router.post('/products',  async (req,res) => {
       values ('${fields.name}','${fields.serial}','${directoryToSaveImagesProducts}${fields.name}.jpg','${fields.manufacturer}','${fields.description}','${fields.price}');`,
       function(err,result,fields){
         if (err) throw new Error(err)
-          
-        console.log("Writed to db success")
+         console.log("Writed to db success")
       })
-    })});
+})});
 
 module.exports = router;
