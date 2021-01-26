@@ -57,22 +57,48 @@ router.delete('/serials', async (req,res) =>{
   })
 })
 
+//RESTful Manufacturers table
+
 router.get('/manufacturers',  async (req,res) => {
-  database.query('select Company,Location,Number from Man ufacturers',function(err,result,fields){
-    if (err) throw new Error(err)
+  if(req.query.id >= 0 && req.query.id != undefined){
+    database.query(`select id,Company,Location,Tel from manufacturers where id = '${req.query.id}'`,function(err,result,fields){
+      if (err) throw new Error(err)
 
-    const requestData = JSON.stringify(result)
+      res.send(JSON.stringify(result))
+    })
+  }else{
+    database.query('select id,Company,Location,Tel from manufacturers',function(err,result,fields){
+      if (err) throw new Error(err)
 
-    res.send(requestData)
-  })
+      const requestData = JSON.stringify(result)
+
+      res.send(requestData)
+    })
+  }
 })
 
 router.post('/manufacturers',  async (req,res) => {
-  database.query(`insert into manufacturers(Company,Location,Number) values ('${req.body.Company}','${req.body.Location}','${req.body.Number}')`,function(err,result,fields){
+  database.query(`insert into manufacturers(Company,Location,Tel) values ('${req.body.Company}','${req.body.Location}','${req.body.Tel}')`,function(err,result,fields){
     if (err) throw new Error(err)
-    console.log(result)
+    
+    res.sendStatus(201)
   })
+})
 
+router.put('/manufacturers', async (req,res) =>{
+  database.query(`update manufacturers set Company = '${req.body.Company}', Location = '${req.body.Location}', Tel = '${req.body.Tel}' where id = '${req.body.id}'`, function(err,result,fields){
+    if (err) throw new Error(err)
+
+    res.sendStatus(200)
+  })
+})
+
+router.delete('/manufacturers', async (req,res) =>{
+  database.query(`delete from manufacturers where id = '${req.query.id}'`, function(err,retult,fields){
+    if (err) throw new Error(err)
+
+    res.sendStatus(204)
+  })
 })
 
 router.get('/motors',  async (req,res) => {
