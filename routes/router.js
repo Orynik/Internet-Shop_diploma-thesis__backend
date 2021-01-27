@@ -101,15 +101,54 @@ router.delete('/manufacturers', async (req,res) =>{
   })
 })
 
+//RESTful Motors table
+
 router.get('/motors',  async (req,res) => {
-  database.query('select Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving from Motors',function(err,result,fields){
+  if(req.query.id > 0 && req.query.id != undefined){
+    database.query(`select id,Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving from motors where id = ${req.query.id}`,function(err,result,fields){
+      if (err) throw new Error(err)
+
+      const requestData = JSON.stringify(result)
+
+      res.send(requestData)
+    })
+  }else{
+    database.query('select id,Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving from motors',function(err,result,fields){
+      if (err) throw new Error(err)
+
+      const requestData = JSON.stringify(result)
+
+      res.send(requestData)
+    })
+  }
+})
+
+router.post('/motors', async (req,res) =>{
+  database.query(`insert into motors(Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving) values ('${req.body.Name}','${req.body.Serial}','${req.body.MaxPower}','${req.body.MinPower}',${req.body.IsFullSolution},${req.body.IsEnergySaving})`, function(err,result,field){
     if (err) throw new Error(err)
 
-    const requestData = JSON.stringify(result)
-
-    res.send(requestData)
+    res.send(JSON.stringify(result))
   })
 })
+
+router.put('/motors', async (req,res) =>{
+  console.log(`update motors set Name = '${req.body.Name}', Serial = '${req.body.Serial}', MaxPower = '${req.body.MaxPower}' ,MinPower = '${req.body.MinPower}',IsFullSolution = ${req.body.IsFullSolution}, IsEnergySaving = ${req.body.IsEnergySaving} where id = ${req.body.id}`)
+
+  database.query(`update motors set Name = '${req.body.Name}', Serial = '${req.body.Serial}', MaxPower = '${req.body.MaxPower}' ,MinPower = '${req.body.MinPower}',IsFullSolution = ${req.body.IsFullSolution}, IsEnergySaving = ${req.body.IsEnergySaving} where id = ${req.body.id}`, function(err,result,fields){
+    if (err) throw new Error(err)
+
+    res.sendStatus(200)
+  })
+})
+
+router.delete('/motors', async (req,res) =>{
+  database.query(`delete from motors where id = '${req.query.id}'`, function(err,retult,fields){
+    if (err) throw new Error(err)
+
+    res.sendStatus(204)
+  })
+})
+
 //TODO: Написать обработчики для обработки респонсов
 router.get('/products', async (req,res) => {
   database.query('select Name,Serial,LintToImage,Manufacturer,Description,Price from Products',function(err,result,fields){
