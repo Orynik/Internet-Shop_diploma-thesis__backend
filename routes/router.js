@@ -4,14 +4,11 @@ const database = require('../database')
 const fs = require('fs')
 const router = Router()
 
-const directoryToSaveImagesProducts = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
+const colors = require('colors')
 
-router.get('/',  async (req,res) => {
-  res.send([
-    {
-    }
-  ])
-})
+const directoryToSaveImagesProducts = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
+const directoryToSaveImagesProductsWindows = `C:\\Users\\Orynik\\Desktop\\Диплом\\Internet-Shop_diploma-thesis__backend\\images\\products\\`;
+//TODO: Написать обработчики для обработки респонсов
 
 //RESTful Serials table
 
@@ -149,9 +146,9 @@ router.delete('/motors', async (req,res) =>{
   })
 })
 
-//TODO: Написать обработчики для обработки респонсов
+
 router.get('/products', async (req,res) => {
-  database.query('select Name,Serial,LintToImage,Manufacturer,Description,Price from Products',function(err,result,fields){
+  database.query('select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products',function(err,result,fields){
     if (err) throw new Error(err)
 
     const requestData = JSON.stringify(result)
@@ -161,25 +158,64 @@ router.get('/products', async (req,res) => {
 })
 
 router.post('/products',  async (req,res) => {
-  var form = new formParser.IncomingForm();
+  let form = new formParser.IncomingForm();
+
+
   form.parse(req, function(err, fields, files){
       if(err) console.error(err);
-      console.log(fields);
 
       fs.copyFile(
         files.file.path,
-        `${directoryToSaveImagesProducts}${fields.name}.jpg`,
+        `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
         (err) => {
-          if(err) throw err
-          console.log('file moved')
+          if(err) throw new Error(err)
+          console.log('file moved'.red)
         })
 
-      database.query(`Insert into Products(Name,Serial,LintToImage,Manufacturer,Description,Price)
-      values ('${fields.name}','${fields.serial}','${directoryToSaveImagesProducts}${fields.name}.jpg','${fields.manufacturer}','${fields.description}','${fields.price}');`,
+      database.query(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
+      values ('${fields.Name}','${fields.Serial}','${directoryToSaveImagesProducts}${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
+      function(err,result,fields){
+        if (err) {
+          res.sendStatus(500)
+          throw new Error(err)
+        }
+         console.log("Writed to db success".cyan)
+         res.sendStatus(201)
+      })
+})
+});
+
+router.put('/products', async (req,res) =>{
+  // fs.copyFile(
+  //   files.file.path,
+  //   `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
+  //   (err) => {
+  //     if(err) throw err
+  //     console.log('file moved'.red)
+  //   }
+  // )
+
+  let form = new formParser.IncomingForm();
+
+  form.parse(req, function(err, fields, files){
+    console.log(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${directoryToSaveImagesProductsWindows}${fields.name}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`.red)
+    if (err) throw new Error(err)
+    database.query(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${directoryToSaveImagesProductsWindows}${fields.name}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`,
       function(err,result,fields){
         if (err) throw new Error(err)
-         console.log("Writed to db success")
+
+        res.sendStatus(200)
       })
-})});
+  })
+})
+
+router.delete('/products', async (req,res) =>{
+  console.log(req.query.id)
+  database.query(`delete from products where id = '${req.query.id}'`, function(err,retult,fields){
+    if (err) throw new Error(err)
+
+    res.sendStatus(204)
+  })
+})
 
 module.exports = router;
