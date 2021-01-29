@@ -3,7 +3,6 @@ const bodyParser = require("body-parser")
 const cors = require("cors")
 const morgan = require("morgan")
 
-const database = require("./database");
 const config = require('./config/config')
 const router = require('./routes/router')
 
@@ -13,6 +12,7 @@ app.use(morgan('combined'))
 app.use(bodyParser.json())
 app.use(cors())
 
+app.use('/img',express.static(`${__dirname}/images/products`))
 app.use(router)
 
 
