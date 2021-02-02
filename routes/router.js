@@ -58,13 +58,13 @@ router.delete('/serials', async (req,res) =>{
 
 router.get('/manufacturers',  async (req,res) => {
   if(req.query.id >= 0 && req.query.id != undefined){
-    database.query(`select id,Company,Location,Tel from manufacturers where id = '${req.query.id}'`,function(err,result,fields){
+    database.query(`select id,Company,Country,Tel,Address from manufacturers where id = '${req.query.id}'`,function(err,result,fields){
       if (err) throw new Error(err)
 
       res.send(JSON.stringify(result))
     })
   }else{
-    database.query('select id,Company,Location,Tel from manufacturers',function(err,result,fields){
+    database.query('select id,Company,Country,Tel,Address from manufacturers',function(err,result,fields){
       if (err) throw new Error(err)
 
       const requestData = JSON.stringify(result)
@@ -102,7 +102,7 @@ router.delete('/manufacturers', async (req,res) =>{
 
 router.get('/motors',  async (req,res) => {
   if(req.query.id > 0 && req.query.id != undefined){
-    database.query(`select id,Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving from motors where id = ${req.query.id}`,function(err,result,fields){
+    database.query(`select id,Name,Serial,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where id = ${req.query.id}`,function(err,result,fields){
       if (err) throw new Error(err)
 
       const requestData = JSON.stringify(result)
@@ -110,7 +110,7 @@ router.get('/motors',  async (req,res) => {
       res.send(requestData)
     })
   }else{
-    database.query('select id,Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving from motors',function(err,result,fields){
+    database.query('select id,Name,Serial,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors',function(err,result,fields){
       if (err) throw new Error(err)
 
       const requestData = JSON.stringify(result)
@@ -121,7 +121,8 @@ router.get('/motors',  async (req,res) => {
 })
 
 router.post('/motors', async (req,res) =>{
-  database.query(`insert into motors(Name,Serial,MaxPower,MinPower,IsFullSolution,IsEnergySaving) values ('${req.body.Name}','${req.body.Serial}','${req.body.MaxPower}','${req.body.MinPower}',${req.body.IsFullSolution},${req.body.IsEnergySaving})`, function(err,result,field){
+  console.log(`insert into motors(Name,Serial,Power,RotationSpeed,Perfomance, PowerFactor, MultiplicityMaximum, Sliding) values (\'${req.body.Name}\',\'${req.body.Serial}\',${req.body.Power},${req.body.RotationSpeed},${req.body.Perfomance},${req.body.PowerFactor},${req.body.MultiplicityMaximum},${req.body.Sliding})`.red)
+  database.query(`insert into motors(Name,Serial,Power,RotationSpeed,Perfomance, PowerFactor, MultiplicityMaximum, Sliding) values (\'${req.body.Name}\',\'${req.body.Serial}\',${req.body.Power},${req.body.RotationSpeed},${req.body.Perfomance},${req.body.PowerFactor},${req.body.MultiplicityMaximum},${req.body.Sliding})`, function(err,result,field){
     if (err) throw new Error(err)
 
     res.send(JSON.stringify(result))
@@ -129,9 +130,9 @@ router.post('/motors', async (req,res) =>{
 })
 
 router.put('/motors', async (req,res) =>{
-  console.log(`update motors set Name = '${req.body.Name}', Serial = '${req.body.Serial}', MaxPower = '${req.body.MaxPower}' ,MinPower = '${req.body.MinPower}',IsFullSolution = ${req.body.IsFullSolution}, IsEnergySaving = ${req.body.IsEnergySaving} where id = ${req.body.id}`)
+  console.log(`update motors set Name = '${req.body.Name}', Serial = '${req.body.Serial}', Power = '${req.body.Power}' ,RotationSpeed = '${req.body.RotationSpeed}',Perfomance = ${req.body.Perfomance}, PowerFactor = ${req.body.PowerFactor},MultiplicityMaximum = ${req.body.MultiplicityMaximum},Sliding = ${req.body.Sliding} where id = ${req.query.id}`)
 
-  database.query(`update motors set Name = '${req.body.Name}', Serial = '${req.body.Serial}', MaxPower = '${req.body.MaxPower}' ,MinPower = '${req.body.MinPower}',IsFullSolution = ${req.body.IsFullSolution}, IsEnergySaving = ${req.body.IsEnergySaving} where id = ${req.body.id}`, function(err,result,fields){
+  database.query(`update motors set Name = '${req.body.Name}', Serial = '${req.body.Serial}', Power = '${req.body.Power}' ,RotationSpeed = '${req.body.RotationSpeed}',Perfomance = ${req.body.Perfomance}, PowerFactor = ${req.body.PowerFactor} where id = ${req.query.id}`, function(err,result,fields){
     if (err) throw new Error(err)
 
     res.sendStatus(200)
@@ -146,6 +147,7 @@ router.delete('/motors', async (req,res) =>{
   })
 })
 
+//RESTful Products table
 
 router.get('/products', async (req,res) => {
   database.query('select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products',function(err,result,fields){
