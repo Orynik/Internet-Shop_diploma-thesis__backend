@@ -19,15 +19,21 @@
   "homepage": "https://github.com/Orynik/Internet-Shop_diploma-thesis__backend#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "form-data": "^3.0.0",
     "formidable": "^1.2.2",
     "fs": "0.0.1-security",
     "morgan": "^1.10.0",
-    "mysql2": "^2.2.5"
+    "multiparty": "^4.2.2",
+    "mysql2": "^2.2.5",
+    "node-static": "^0.7.11"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "chai": "^4.3.0",
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.4",
+    "sinon": "^9.2.4"
   }
 }
