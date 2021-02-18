@@ -10,7 +10,7 @@ const { resolveSoa } = require('dns')
 
 const directoryToSaveImagesProducts = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
 const directoryToSaveImagesProductsWindows = `C:\\Users\\Orynik\\Desktop\\Диплом\\Internet-Shop_diploma-thesis__backend\\images\\products\\`;
-const URLImageServer = `http://localhost:4444/images/products`
+const URLImageServer = `http://localhost:4444/img/`
 //TODO: Написать обработчики для обработки респонсов
 
 function checkErrorDB(mysqlErr,res){
@@ -22,7 +22,7 @@ function checkErrorDB(mysqlErr,res){
       }if(sqlErr == "ER_DUP_KEY"){
         res.status(400).send(sqlErr).end()
         break
-      }if(sqlErr.errono == "ER_TRUNCATED_WRONG_VALUE"){
+      }if(sqlErr == "ER_TRUNCATED_WRONG_VALUE"){
         console.log("done")
         res.status(400).send(sqlErr).end()
         break
@@ -170,6 +170,18 @@ router.get('/motors',  async (req,res) => {
 
       res.send(requestData)
     })
+  }if(req.query.name && req.query.serial){
+    console.log(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where Name = ${req.query.name} and Serial = ${req.query.serial}`.red)
+    database.query(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where Name = '${req.query.name}' and Serial = '${req.query.serial}'`,function(err,result,fields){
+      if (err){
+        console.log(err)
+        res.sendStatus(500)
+      }
+
+      const requestData = JSON.stringify(result)
+
+      res.send(requestData)
+    })
   }else{
     database.query('select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors',function(err,result,fields){
       if (err){
@@ -185,6 +197,7 @@ router.get('/motors',  async (req,res) => {
 })
 
 router.post('/motors', async (req,res) =>{
+  console.log(res.body)
   database.query(`insert into motors(Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance, PowerFactor, MultiplicityMaximum, Sliding) values (\'${req.body.Name}\',\'${req.body.Serial}\',${req.body.OperatingVoltage},${req.body.Power},${req.body.RotationSpeed},${req.body.Perfomance},${req.body.PowerFactor},${req.body.MultiplicityMaximum},${req.body.Sliding})`, function(err,result,field){
     if (err){
       checkErrorDB(err,res)
@@ -223,16 +236,31 @@ router.delete('/motors', async (req,res) =>{
 //RESTful Products table
 
 router.get('/products', async (req,res) => {
-  database.query('select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products',function(err,result,fields){
-    if (err){
-      console.log(err)
-      res.sendStatus(500)
-    }
-
-    const requestData = JSON.stringify(result)
-
-    res.send(requestData)
-  })
+  if(req.query.id > 0 && req.query.id != undefined){
+    console.log(req.query.id)
+    database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products where id = ${req.query.id}`,function(err,result,fields){
+      if (err){
+        console.log(err)
+        res.sendStatus(500)
+      }
+  
+      const requestData = JSON.stringify(result)
+  
+      res.send(requestData)
+    })
+  }else{
+    console.log(req.query.id)
+    database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products`,function(err,result,fields){
+      if (err){
+        console.log(err)
+        res.sendStatus(500)
+      }
+  
+      const requestData = JSON.stringify(result)
+  
+      res.send(requestData)
+    })
+  }
 })
 
 router.post('/products',  async (req,res) => {
@@ -251,7 +279,7 @@ router.post('/products',  async (req,res) => {
         })
 
       database.query(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
-      values ('${fields.Name}','${fields.Serial}','${directoryToSaveImagesProducts}${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
+      values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
       function(err,result,fields){
         if (err) {
           res.sendStatus(500)
@@ -264,18 +292,18 @@ router.post('/products',  async (req,res) => {
 });
 
 router.put('/products', async (req,res) =>{
-  fs.copyFile(
-    files.file.path,
-    `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
-    (err) => {
-      if(err) throw err
-      console.log('file moved'.red)
-    }
-  )
-
   let form = new formParser.IncomingForm();
 
   form.parse(req, function(err, fields, files){
+    fs.copyFile(
+      files.file.path,
+      `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
+      (err) => {
+        if(err) throw err
+        console.log('file moved'.red)
+      }
+    )
+
     console.log(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${URLImageServer}${fields.name}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`.red)
     if (err) throw new Error(err)
     database.query(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${URLImageServer}${fields.name}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`,
