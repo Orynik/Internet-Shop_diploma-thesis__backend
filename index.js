@@ -10,7 +10,10 @@ const app = express();
 
 app.use(morgan('combined'))
 app.use(bodyParser.json())
-app.use(cors())
+app.use(cors({
+  origin: config.AllowOrigins,
+  credentials: true
+}))
 
 app.use('/img',express.static(`${__dirname}/images/products`))
 app.use(router)
