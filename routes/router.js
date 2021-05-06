@@ -3,10 +3,11 @@
   const fs = require('fs')
   const router = Router()
   const colors = require('colors')
+  const session = require("express-session")
 
   const database = require('../database')
   const errorCode = require("../sqlError")
-  const { resolveSoa } = require('dns')
+  const { resolveSoa, resolveSrv } = require('dns')
   const { connect } = require('../database')
 
   const directoryToSaveImagesProducts = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
@@ -16,6 +17,27 @@
 
 
   // TODO: Корзину доделать
+
+  router.post("/singup", async (req,res) =>{
+    console.log(req.body.FirstName)
+    console.log(req.body)
+
+    database.query(`insert into users (Login,LastName,FirstName,Tel,Password,Permission)
+    value(
+      '${req.body.Login}',
+      '${req.body.LastName}',
+      '${req.body.FirstName}',
+      ${req.body.Phone},
+      '${req.body.Password}',
+      "User")`
+    ,function(err,result,fields){
+      if (err){
+        res.status(500).send(String(err.errno)).end;
+      }else{
+        res.sendStatus(201)
+      }
+    })
+  })
 
   router.post("/cart", async (req,res) => {
 
