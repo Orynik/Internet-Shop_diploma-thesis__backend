@@ -3,24 +3,29 @@
   const fs = require('fs')
   const router = Router()
   const colors = require('colors')
-  const session = require("express-session")
 
   const database = require('../database')
   const errorCode = require("../sqlError")
   const { resolveSoa, resolveSrv } = require('dns')
   const { connect } = require('../database')
+  const { send } = require('process')
 
-  const directoryToSaveImagesProducts = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
+  const directoryToSaveImagesProductsLinux = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
   const directoryToSaveImagesProductsWindows = `C:\\Users\\Orynik\\Desktop\\Диплом\\Internet-Shop_diploma-thesis__backend\\images\\products\\`;
   const URLImageServer = `http://localhost:4444/img/`
   //TODO: Написать обработчики для обработки респонсов
 
-
-  // TODO: Корзину доделать
-
   router.post("/singup", async (req,res) =>{
     console.log(req.body.FirstName)
     console.log(req.body)
+    console.log(`insert into users (Login,LastName,FirstName,Tel,Password,Permission)
+    value(
+      '${req.body.Login}',
+      '${req.body.LastName}',
+      '${req.body.FirstName}',
+      ${req.body.Phone},
+      '${req.body.Password}',
+      "User")`)
 
     database.query(`insert into users (Login,LastName,FirstName,Tel,Password,Permission)
     value(
@@ -32,6 +37,7 @@
       "User")`
     ,function(err,result,fields){
       if (err){
+        console.log(err)
         res.status(500).send(String(err.errno)).end;
       }else{
         res.sendStatus(201)
@@ -39,8 +45,49 @@
     })
   })
 
+  router.post("/signin", async (req,res) =>{
+    const username = req.body.Login;
+    const password = req.body.Password;
+    database.query(`select Login,Password from users where login = '${username}' and password = '${password}'`
+    ,function(err,result,fields){
+      if(result.length > 0){
+        req.session.User = username
+        res.sendStatus(201)
+      }else{
+        res.status(401).send("Error: User does not exist");
+      }
+    })
+  })
+
   router.post("/cart", async (req,res) => {
 
+
+    let connectSid = undefined;
+
+    if(req.cookies['connect.sid']){
+      console.log('exist!')
+      connectSid = req.cookies['connect.sid']
+
+    }else{
+      console.log(req.session)
+      console.log(req.cookies['connect.sid'])
+    }
+
+    // let cart = req.body;
+    // database.query(`select * from motors
+    // cross join products
+    // where products.Name = '${cart.Name}' AND motors.Name = '${cart.Name}' AND motors.Serial = '${cart.Serial}' AND products.Serial = '${cart.Serial}' `,function(err,result  ,fields){
+    //   if (err){
+    //     console.log(err)
+    //   }
+    //   result.push({
+    //     count: 1,
+    //     Date: Date.now(),
+    //   })
+    //   console.log(result)
+    // })
+
+    res.sendStatus(201)
   })
 
   router.get('/cart', async (req,res) => {
