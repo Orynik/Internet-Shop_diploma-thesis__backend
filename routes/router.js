@@ -9,6 +9,7 @@
   const { resolveSoa, resolveSrv } = require('dns')
   const { connect } = require('../database')
   const { send } = require('process')
+const { json } = require('body-parser')
 
   const directoryToSaveImagesProductsLinux = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
   const directoryToSaveImagesProductsWindows = `C:\\Users\\Orynik\\Desktop\\Диплом\\Internet-Shop_diploma-thesis__backend\\images\\products\\`;
@@ -59,9 +60,25 @@
     })
   })
 
+  router.get("/auth", async (req,res) =>{
+    if(req.cookies["connect.sid"] != undefined){
+      database.query("Select session_id,data from sessions",async (err,result,fields) =>{
+        if(result.length <= 0){
+          res.sendStatus(402)
+        }else{
+          if(result[0].session_id.split("[:,.]")[0] === result[0].session_id){
+            const username = JSON.parse(result[0].data).User || undefined
+            res.status(200).send(username);
+          }
+        }
+      })
+    }
+    else{
+      res.sendStatus(402)
+    }
+  })
+
   router.post("/cart", async (req,res) => {
-
-
     let connectSid = undefined;
 
     if(req.cookies['connect.sid']){

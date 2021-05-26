@@ -21,7 +21,11 @@ app.use(morgan('common'))
 app.use(bodyParser.json())
 app.use(cors({
   origin: config.AllowOrigins,
-  credentials: true
+  credentials: true,
+  allowedHeaders:{
+    //Разрешение на отправку cookie
+    "Access-Control-Allow-Credentials": true
+  }
 }))
 
 app.use(cookieparser());
@@ -53,7 +57,7 @@ let session_variable = {
   resave: false,
   store: sessionStore,
   cookie:{
-    maxAge: 86400, //86 400 - сутки в секундах
+    maxAge: 86400000, //86 400 - сутки в секундах
     secure: false,
     sameSite: true
   }
