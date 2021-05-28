@@ -9,12 +9,72 @@
   const { resolveSoa, resolveSrv } = require('dns')
   const { connect } = require('../database')
   const { send } = require('process')
-const { json } = require('body-parser')
+  const { json } = require('body-parser')
+  
+  const subsFunctions = require("../subsidiaryFunctionAuth")
 
   const directoryToSaveImagesProductsLinux = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
   const directoryToSaveImagesProductsWindows = `C:\\Users\\Orynik\\Desktop\\Диплом\\Internet-Shop_diploma-thesis__backend\\images\\products\\`;
   const URLImageServer = `http://localhost:4444/img/`
   //TODO: Написать обработчики для обработки респонсов
+
+  function checkErrorDB(mysqlErr,res){
+    for(const sqlErr in errorCode){
+      if(mysqlErr.code == sqlErr){
+        if(sqlErr == "ER_DATA_TOO_LONG"){
+          res.status(400).send(sqlErr).end()
+          break
+        }if(sqlErr == "ER_DUP_KEY"){
+          res.status(400).send(sqlErr).end()
+          break
+        }if(sqlErr == "ER_TRUNCATED_WRONG_VALUE"){
+          console.log("done")
+          res.status(400).send(sqlErr).end()
+          break
+        }else{
+          console.log(sqlErr)
+          res.sendStatus(500)
+          break
+        }
+      }
+    }
+  }
+
+  async function isHavePermission(userCookie){
+    if(userCookie != undefined){
+        userCookie = userCookie.split(':')[1].split(".")[0]
+        let result = subsFunctions.getUserName(userCookie).then(
+          (res) => {
+            return subsFunctions.getPermissionVariable(res).then(
+              (permissionName) => {
+                return permissionName
+              },
+              (err) =>{
+                // Обработка ошибки базы данных
+              }
+            )
+          },
+          (err) => {
+            if(err == null){
+              console.log("Not found user")
+              return false
+            }else{
+              // Обработка ошибки базы данных
+            }
+          }
+        )
+        return await result.then(
+            (permissionName) => {
+              if(permissionName == "Admin"){
+                return true
+              }
+              else{
+                return false
+              }
+            })
+    }
+    console.log(false)
+  }
 
   router.post("/singup", async (req,res) =>{
     console.log(req.body.FirstName)
@@ -62,19 +122,33 @@ const { json } = require('body-parser')
 
   router.get("/auth", async (req,res) =>{
     if(req.cookies["connect.sid"] != undefined){
-      database.query("Select session_id,data from sessions",async (err,result,fields) =>{
-        if(result.length <= 0){
-          res.sendStatus(402)
+      const cookie = req.cookies["connect.sid"].split(':')[1].split(".")[0]
+      database.query(`Select data from sessions where session_id = "${cookie}"`,async (err,result,fields) =>{
+        if(result === undefined){
+          res.sendStatus(401)
         }else{
-          if(result[0].session_id.split("[:,.]")[0] === result[0].session_id){
-            const username = JSON.parse(result[0].data).User || undefined
-            res.status(200).send(username);
-          }
+          const username = JSON.parse(result[0].data).User
+          res.status(200).send(username);
         }
       })
     }
     else{
-      res.sendStatus(402)
+      res.sendStatus(401)
+    }
+  })
+
+  router.get("/checkPermission", async (req,res) => {
+    if(await isHavePermission(req.cookies["connect.sid"]) == true) res.status(201).send("Authorized")
+    else{
+      res.sendStatus(401)
+    }
+  })
+
+  router.get("/logout", async (req,res) => {
+    if(req.cookies["connect.sid"] != undefined){
+      req.session.destroy()
+      res.clearCookie("connect.sid")
+      res.sendStatus(200)
     }
   })
 
@@ -113,61 +187,27 @@ const { json } = require('body-parser')
     }
   })
 
-  // TODO: Авторизация и регистрация
-
-  router.post('/reg', async (req,res) => {
-    console.log("test")
-
-    console.log(req.body.q)
-
-    res.status(201)
-    res.send(req.body.q)
-  })
-
-
-  function checkErrorDB(mysqlErr,res){
-    for(const sqlErr in errorCode){
-      if(mysqlErr.code == sqlErr){
-        if(sqlErr == "ER_DATA_TOO_LONG"){
-          res.status(400).send(sqlErr).end()
-          break
-        }if(sqlErr == "ER_DUP_KEY"){
-          res.status(400).send(sqlErr).end()
-          break
-        }if(sqlErr == "ER_TRUNCATED_WRONG_VALUE"){
-          console.log("done")
-          res.status(400).send(sqlErr).end()
-          break
-        }else{
-          console.log(sqlErr)
-          res.sendStatus(500)
-          break
-        }
-      }
-    }
-  }
-
   //RESTful Serials table
 
   router.get('/serials',  async (req,res) => {
-
-    if(req.query.id > 0 && req.query.id != undefined){
-      database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
-        if (err){
-          res.status(500).send(err)
-        }
-
-        res.send(JSON.stringify(result))
-      })
-    }else{
-      database.query('select id,Serial from Serials',function(err,result,fields){
-        if (err){
-          res.status(500).send(err)
-        }
-        res.status(200).send(JSON.stringify(result))
-      })
+    if(isHavePermission(req.cookies["connect.sid"])) res.sendStatus(401)
+    else{
+      if(req.query.id > 0 && req.query.id != undefined){
+        database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
+          if (err){
+            res.status(500).send(err)
+          }
+          res.send(JSON.stringify(result))
+        })
+      }else{
+        database.query('select id,Serial from Serials',function(err,result,fields){
+          if (err){
+            res.status(500).send(err)
+          }
+          res.status(200).send(JSON.stringify(result))
+        })
+      }
     }
-
   })
 
   router.post('/serials',  async (req,res) => {
@@ -349,7 +389,7 @@ const { json } = require('body-parser')
 
   router.get('/products', async (req,res) => {
     if(req.query.id > 0 && req.query.id != undefined){
-      console.log(req.query.id)
+
       database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products where id = ${req.query.id}`,function(err,result,fields){
         if (err){
           console.log(err)

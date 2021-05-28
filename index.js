@@ -22,10 +22,11 @@ app.use(bodyParser.json())
 app.use(cors({
   origin: config.AllowOrigins,
   credentials: true,
-  allowedHeaders:{
-    //Разрешение на отправку cookie
-    "Access-Control-Allow-Credentials": true
-  }
+  methods: "GET,PUT,POST,DELETE,OPTIONS",
+  "Access-Control-Allow-Credentials": true,
+  allowedHeaders:[
+    "content-type"
+  ]
 }))
 
 app.use(cookieparser());
