@@ -153,6 +153,23 @@
       res.sendStatus(402)
     }
   })
+
+  router.delete("/cart", async (req,res) => {
+    if(req.cookies['connect.sid'] != undefined){
+      const username = await subsFunctions.getUserName(req.sessionID);
+      const cartId = req.header('cartid');
+      let q = database.query(`delete from carts where Cart_id = '${cartId}' AND UserName = '${username}'`, 
+      async (err) => {
+        if(err != null){
+          console.log(err)
+        }
+        res.sendStatus(200)
+      })
+  }else{
+    res.sendStatus(402)
+  }
+  })
+
   router.post("/cart", async (req,res) => {
     if(req.cookies['connect.sid'] != undefined){
       let UserName = await subsFunctions.getUserName(req.sessionID)
@@ -206,7 +223,7 @@
         res.sendStatus(401)
       }
       else{
-        database.query(`Select Name,Serial,Manufacturer,Price,AmountItems from carts where UserName = '${username}'`, async (err,result) => {
+        database.query(`Select Cart_id,Name,Serial,Manufacturer,Price,AmountItems from carts where UserName = '${username}'`, async (err,result) => {
           if(err != null){
             console.log(err);
             res.statusCode(500)
