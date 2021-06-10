@@ -24,15 +24,15 @@ app.use(cors({
   credentials: true,
   methods: "GET,PUT,POST,DELETE,OPTIONS",
   "Access-Control-Allow-Credentials": true,
-  allowedHeaders:[
-    "content-type"
-  ]
+  // allowedHeaders:[
+  //   "content-type"
+  // ]
 }))
 
 app.use(cookieparser());
 
 function genuuid(req){
-  return uuidKey.v4()
+  return uuidKey.v4(req)
 }
 
 let sessionStore = new MySQLStore({
