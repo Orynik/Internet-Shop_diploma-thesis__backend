@@ -42,7 +42,6 @@
 
   async function isHavePermission(userCookie){
     if(userCookie != undefined){
-        userCookie = userCookie.split(':')[1].split(".")[0]
         let result = subsFunctions.getUserName(userCookie).then(
           (res) => {
             return subsFunctions.getPermissionVariable(res).then(
@@ -73,7 +72,7 @@
               }
             })
     }
-    console.log(false)
+    return false
   }
 
   router.post("/singup", async (req,res) =>{
@@ -138,7 +137,7 @@
   })
 
   router.get("/checkPermission", async (req,res) => {
-    if(await isHavePermission(req.cookies["connect.sid"]) == true) res.status(201).send("Authorized")
+    if(await isHavePermission(req.sessionID) == true) res.status(201).send("Authorized")
     else{
       res.sendStatus(401)
     }
@@ -150,48 +149,80 @@
       res.clearCookie("connect.sid")
       res.sendStatus(200)
     }
-  })
-
-  router.post("/cart", async (req,res) => {
-    let connectSid = undefined;
-
-    if(req.cookies['connect.sid']){
-      console.log('exist!')
-      connectSid = req.cookies['connect.sid']
-
-    }else{
-      console.log(req.session)
-      console.log(req.cookies['connect.sid'])
+    else{
+      res.sendStatus(402)
     }
+  })
+  router.post("/cart", async (req,res) => {
+    if(req.cookies['connect.sid'] != undefined){
+      let UserName = await subsFunctions.getUserName(req.sessionID)
+      let getProductInformation = function(){
+        return new Promise(function(resolve,reject){
+          database.query(
+            `select Name,Serial,Manufacturer,Price from products where Name = '${req.body.Name}' AND Serial = '${req.body.Serial}'`
+            ,function(err,result){
+              if(err){
+                console.log(err)
+                reject("Error happend:", err)
+              }else if(result.length < 1){
+                reject("No have result")
+              }else if(result.length > 1){
+                reject("More than 1 result object was return")
+              }
+              resolve(result[0])
+        })
+        })
+      }
 
-    // let cart = req.body;
-    // database.query(`select * from motors
-    // cross join products
-    // where products.Name = '${cart.Name}' AND motors.Name = '${cart.Name}' AND motors.Serial = '${cart.Serial}' AND products.Serial = '${cart.Serial}' `,function(err,result  ,fields){
-    //   if (err){
-    //     console.log(err)
-    //   }
-    //   result.push({
-    //     count: 1,
-    //     Date: Date.now(),
-    //   })
-    //   console.log(result)
-    // })
+      let resultProductInfo = await getProductInformation()
+      console.log(resultProductInfo)
 
-    res.sendStatus(201)
+      let addToCards = function(data,username){
+        return new Promise((resolve,reject) => {
+          database.query(`insert into carts(UserName,Name,Serial,Manufacturer,Price,AmountItems,TimeStamp) values ("${username}","${data.Name}","${data.Serial}","${data.Manufacturer}",${data.Price},1,"${Date.now()}")`,
+              function(err){
+                if(err){
+                  console.log(err)
+                  reject("Error happend:", err)
+                }
+                resolve(true)
+          })
+        })
+      }
+      if(await addToCards(resultProductInfo,UserName) == true){
+        res.sendStatus(201)
+      }
+      else{
+        res.sendStatus(500)
+      }
+    }
   })
 
   router.get('/cart', async (req,res) => {
     if(req.cookies['connect.sid'] != undefined){
-
+      let username = await subsFunctions.getUserName(req.sessionID);
+      if (username == null){
+        //TODO: Вернуть ошибку с с несуществующем пользователем
+        res.sendStatus(401)
+      }
+      else{
+        database.query(`Select Name,Serial,Manufacturer,Price,AmountItems from carts where UserName = '${username}'`, async (err,result) => {
+          if(err != null){
+            console.log(err);
+            res.statusCode(500)
+          }
+          console.log(result)
+          res.send(result)
+        })
+      }
+    }else{
+      res.sendStatus(401)
     }
   })
 
   //RESTful Serials table
 
   router.get('/serials',  async (req,res) => {
-    if(isHavePermission(req.cookies["connect.sid"])) res.sendStatus(401)
-    else{
       if(req.query.id > 0 && req.query.id != undefined){
         database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
           if (err){
@@ -207,7 +238,7 @@
           res.status(200).send(JSON.stringify(result))
         })
       }
-    }
+
   })
 
   router.post('/serials',  async (req,res) => {
@@ -435,7 +466,6 @@
           console.log("Writed to db success".cyan)
           res.sendStatus(201)
         })
-rs
         fs.copyFile(
           files.file.path,
           `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
