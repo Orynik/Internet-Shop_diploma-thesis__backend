@@ -6,10 +6,7 @@
 
   const database = require('../database')
   const errorCode = require("../sqlError")
-  const { resolveSoa, resolveSrv } = require('dns')
-  const { connect } = require('../database')
-  const { send } = require('process')
-  const { json } = require('body-parser')
+  const emailSender = require("../emailSender")
   
   const subsFunctions = require("../subsidiaryFunctionAuth")
 
@@ -74,6 +71,32 @@
     }
     return false
   }
+
+  router.post("/sendOrder", async (req,res) => {
+    //TODO: Добавить обработчик
+    if(req.cookies["connect.sid"] != undefined){
+      let data = req.body;
+
+      data.username = await subsFunctions.getUserName(req.sessionID)
+
+      database.query(`Select Cart_id,Name,Serial,Manufacturer,Price,AmountItems from carts where UserName = '${data.username}'`, async (err,result) => {
+        if(err != null){
+          console.log(err);
+          res.statusCode(500)
+        }
+        data.backet = result;
+        const resultRequest = emailSender(data)
+
+        if(resultRequest){
+            res.sendStatus(200)
+        }else{
+          res.statusCode(500)
+        }
+      })
+    }else{
+      req.sendStatus(402)
+    }
+  })
 
   router.post("/singup", async (req,res) =>{
     console.log(req.body.FirstName)
@@ -158,7 +181,7 @@
     if(req.cookies['connect.sid'] != undefined){
       const username = await subsFunctions.getUserName(req.sessionID);
       const cartId = req.header('cartid');
-      let q = database.query(`delete from carts where Cart_id = '${cartId}' AND UserName = '${username}'`, 
+      database.query(`delete from carts where Cart_id = '${cartId}' AND UserName = '${username}'`, 
       async (err) => {
         if(err != null){
           console.log(err)
