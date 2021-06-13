@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha ./tests --parallel --reporter spec",
     "start": "nodemon --ext js --watch src"
   },
   "repository": {
@@ -19,6 +19,8 @@
   "homepage": "https://github.com/Orynik/Internet-Shop_diploma-thesis__backend#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
     "colors": "^1.4.0",
     "cookie-parser": "^1.4.5",
     "cookie-session": "^1.4.0",
@@ -40,7 +42,6 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "chai": "^4.3.4",
     "express-jwt": "^6.0.0",
     "mocha": "^8.3.2",
     "nodemon": "^2.0.7",

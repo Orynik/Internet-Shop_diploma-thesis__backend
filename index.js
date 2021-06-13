@@ -78,3 +78,5 @@ app.use(router)
 
 app.listen(process.env.PORT || config.port,
   () => console.log(`Server started on port ${process.env.PORT || config.port}...`))
+
+module.exports = app;
