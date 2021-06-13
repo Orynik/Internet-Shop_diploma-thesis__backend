@@ -262,15 +262,19 @@
   //RESTful Serials table
 
   router.get('/serials',  async (req,res) => {
+      //т.к передается в заголовках текст
+      //то и сравнивать nameMotor нужно с текстовым null во избежание ошибок
       const nameMotor = req.header("ProductName");
-      if(nameMotor != null){
+      console.log(req.query.id)
+
+      if(!(nameMotor == "null" || nameMotor == undefined)){
         database.query(`select Serial from Motors where Name = \'${nameMotor}\'`,function(err,result,fields){
           if (err){
             res.status(500).send(err)
           }
           res.send(JSON.stringify(result))
         })
-      }else if(nameMotor == null){
+      }else{
         if(req.query.id > 0 && req.query.id != undefined){
           database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
             if (err){
@@ -312,7 +316,6 @@
         console.log("\n")
         res.sendStatus(400)
       }
-
       res.sendStatus(202)
     })
   })
