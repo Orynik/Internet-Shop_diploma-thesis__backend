@@ -73,7 +73,6 @@
   }
 
   router.post("/sendOrder", async (req,res) => {
-    //TODO: Добавить обработчик
     if(req.cookies["connect.sid"] != undefined){
       let data = req.body;
 
@@ -263,22 +262,33 @@
   //RESTful Serials table
 
   router.get('/serials',  async (req,res) => {
-      if(req.query.id > 0 && req.query.id != undefined){
-        database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
+      const nameMotor = req.header("ProductName");
+      if(nameMotor != null){
+        database.query(`select Serial from Motors where Name = \'${nameMotor}\'`,function(err,result,fields){
           if (err){
             res.status(500).send(err)
           }
           res.send(JSON.stringify(result))
         })
-      }else{
-        database.query('select id,Serial from Serials',function(err,result,fields){
-          if (err){
-            res.status(500).send(err)
-          }
-          res.status(200).send(JSON.stringify(result))
-        })
+      }else if(nameMotor == null){
+        if(req.query.id > 0 && req.query.id != undefined){
+          database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
+            if (err){
+              res.status(500).send(err)
+            }else{
+              res.send(JSON.stringify(result))
+            }
+          })
+        }else{
+          database.query('select id,Serial from Serials',function(err,result,fields){
+            if (err){
+              res.status(500).send(err)
+            }else{
+              res.status(200).send(JSON.stringify(result))
+            }
+          })
+        }
       }
-
   })
 
   router.post('/serials',  async (req,res) => {
@@ -385,17 +395,16 @@
   router.get('/motors',  async (req,res) => {
     if(req.query.id > 0 && req.query.id != undefined){
       database.query(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where id = ${req.query.id}`,function(err,result,fields){
+        console.log(`${result}`.cyan)
         if (err){
           console.log(err)
           res.sendStatus(500)
+        }else{
+          const requestData = JSON.stringify(result)
+          res.send(requestData)
         }
-
-        const requestData = JSON.stringify(result)
-
-        res.send(requestData)
       })
-    }if(req.query.name && req.query.serial){
-      console.log(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where Name = ${req.query.name} and Serial = ${req.query.serial}`.red)
+    }else if(req.query.name && req.query.serial){
       database.query(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where Name = '${req.query.name}' and Serial = '${req.query.serial}'`,function(err,result,fields){
         if (err){
           console.log(err)
@@ -403,7 +412,6 @@
         }
 
         const requestData = JSON.stringify(result)
-
         res.send(requestData)
       })
     }else{
@@ -412,9 +420,7 @@
           console.log(err)
           res.sendStatus(500)
         }
-
         const requestData = JSON.stringify(result)
-
         res.send(requestData)
       })
     }
@@ -446,7 +452,7 @@
   })
 
   router.delete('/motors', async (req,res) =>{
-    database.query(`delete from motors where id = '${req.query.id}'`, function(err,retult,fields){
+    database.query(`delete from motors where id = '${req.query.id}'`, function(err){
       if (err){
         console.log(err)
         res.status(500).send("Ошибка: Некорректный id")
@@ -488,31 +494,36 @@
 
   router.post('/products',  async (req,res) => {
     let form = new formParser.IncomingForm();
-
-
     form.parse(req, function(err, fields, files){
-        if(err) console.error("Oops");
+      if(err) console.error("Oops");
 
-        console.log(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
-        values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`)
-
-        database.query(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
-        values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
-        function(err,result,fields){
-          if (err) {
-            res.sendStatus(500)
-            throw new Error(err)
-          }
-          console.log("Writed to db success".cyan)
-          res.sendStatus(201)
-        })
-        fs.copyFile(
-          files.file.path,
-          `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
-          (err) => {
-            if(err) throw new Error(err)
-            console.log('file moved'.red)
+      database.query(`select * from Products where Name = "${fields.Name}" AND Serial = "${fields.Serial}" AND Manufacturer = "${fields.Manufacturer}"`, async (err,result) =>{
+        if(err) console.log(err)
+        if(result.length > 0){
+          console.log(result.length)
+          res.status(401).send("has already")
+        }else{
+          console.log("q")
+          database.query(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
+          values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
+          function(err){
+            if (err) {
+              res.sendStatus(500)
+              throw new Error(err)
+            }
+            console.log("Writed to db success".cyan)
+            res.sendStatus(201)
           })
+          fs.copyFile(
+            files.file.path,
+            `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
+            (err) => {
+              if(err) throw new Error(err)
+              console.log('file moved'.red)
+            })
+          }
+      })
+
   })
   });
 

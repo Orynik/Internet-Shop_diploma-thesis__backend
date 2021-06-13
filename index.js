@@ -8,7 +8,6 @@ const session = require("express-session")
 const cookieparser = require("cookie-parser")
 const uuidKey = require("uuid")
 const MySQLStore = require("express-mysql-session")(session)
-// const Passport = require("passport")
 
 const config = require('./config/config')
 const router = require('./routes/router')
@@ -25,7 +24,7 @@ app.use(cors({
   methods: "GET,PUT,POST,DELETE,OPTIONS",
   "Access-Control-Allow-Credentials": true,
   // allowedHeaders:[
-  //   "content-type"
+    // "*"
   // ]
 }))
 
