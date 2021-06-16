@@ -11,7 +11,7 @@
   const subsFunctions = require("../subsidiaryFunctionAuth")
 
   const directoryToSaveImagesProductsLinux = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
-  const directoryToSaveImagesProductsWindows = `C:\\Users\\Orynik\\Desktop\\Диплом\\Internet-Shop_diploma-thesis__backend\\images\\products\\`;
+  const directoryToSaveImagesProductsWindows = `${__dirname}\\..\\images\\products\\`;
   const URLImageServer = `http://localhost:4444/img/`
   //TODO: Написать обработчики для обработки респонсов
 
@@ -71,6 +71,10 @@
     }
     return false
   }
+
+  router.get("/",async (req,res) => {
+    console.log(__dirname)
+  })
 
   router.post("/sendOrder", async (req,res) => {
     if(req.cookies["connect.sid"] != undefined){
@@ -506,9 +510,8 @@
           console.log(result.length)
           res.status(401).send("has already")
         }else{
-          console.log("q")
           database.query(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
-          values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
+          values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}_${fields.Serial}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
           function(err){
             if (err) {
               res.sendStatus(500)
@@ -519,7 +522,7 @@
           })
           fs.copyFile(
             files.file.path,
-            `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
+            `${directoryToSaveImagesProductsWindows}\\${fields.Name}_${fields.Serial}.jpg`,
             (err) => {
               if(err) throw new Error(err)
               console.log('file moved'.red)

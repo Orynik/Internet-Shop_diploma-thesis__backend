@@ -6,7 +6,9 @@ module.exports = {
   MySQL_user: "admin",
   MySQL_database: "Shop",
   MySQL_password: "qwerty12345",
+  MySQL_port_dev: 3306,
+  MySQL_port_prod: 3307,
   SECRET_SESSION_KEY: "APT",
   SECRET_COOKIES_KEY: "APT_COOKIE",
-  AllowOrigins: ["http://localhost:8080"]
+  AllowOrigins: ["http://localhost:8080"],
 }

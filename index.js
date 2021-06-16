@@ -62,6 +62,7 @@ let session_variable = {
     sameSite: true
   }
 }
+console.log(app.get('env'))
 
 // TODO: Добавить такую строчку настройки
 if (app.get('env') === 'production') {
@@ -71,8 +72,7 @@ if (app.get('env') === 'production') {
 app.use(
   session(session_variable)
 )
-
-app.use('/img',express.static(`${__dirname}/images/products`))
+app.use('/img',express.static(`${__dirname}/images/products`,))
 app.use(router)
 
 
