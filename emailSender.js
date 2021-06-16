@@ -8,6 +8,7 @@ async function sendMail(orderData){
         pass:  config.gmail_password,
     },
     secure: false,
+    tls: {rejectUnauthorized: false},
   })
 
   //TODO: Добавить text и html

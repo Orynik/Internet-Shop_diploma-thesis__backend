@@ -5,5 +5,5 @@ RUN npm config set registry http://registry.npmjs.org/ --global
 RUN npm install --only=prod
 COPY . /app
 EXPOSE 4444
-USER node
+USER root
 CMD ["node", "index.js"]

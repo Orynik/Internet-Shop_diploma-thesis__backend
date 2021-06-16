@@ -71,7 +71,7 @@ if (app.get('env') === 'production') {
 
 app.use(
   session(session_variable)
-)
+) 
 app.use('/img',express.static(`${__dirname}/images/products`,))
 app.use(router)
 

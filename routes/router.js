@@ -11,7 +11,7 @@
   const subsFunctions = require("../subsidiaryFunctionAuth")
 
   const directoryToSaveImagesProductsLinux = `/home/orynik/Desktop/Projects/Internet-Shop_diploma-thesis__backend/images/products/`;
-  const directoryToSaveImagesProductsWindows = `${__dirname}\\..\\images\\products\\`;
+  const directoryToSaveImagesProductsWindows = `${__dirname}/../images/products/`;
   const URLImageServer = `http://localhost:4444/img/`
   //TODO: Написать обработчики для обработки респонсов
 
@@ -71,10 +71,6 @@
     }
     return false
   }
-
-  router.get("/",async (req,res) => {
-    console.log(__dirname)
-  })
 
   router.post("/sendOrder", async (req,res) => {
     if(req.cookies["connect.sid"] != undefined){
@@ -147,7 +143,7 @@
 
   router.get("/auth", async (req,res) =>{
     if(req.cookies["connect.sid"] != undefined){
-      const cookie = req.cookies["connect.sid"].split(':')[1].split(".")[0]
+      const cookie = req.sessionID;
       database.query(`Select data from sessions where session_id = "${cookie}"`,async (err,result,fields) =>{
         if(result === undefined){
           res.sendStatus(401)
@@ -199,45 +195,54 @@
   router.post("/cart", async (req,res) => {
     if(req.cookies['connect.sid'] != undefined){
       let UserName = await subsFunctions.getUserName(req.sessionID)
-      let getProductInformation = function(){
-        return new Promise(function(resolve,reject){
-          database.query(
-            `select Name,Serial,Manufacturer,Price from products where Name = '${req.body.Name}' AND Serial = '${req.body.Serial}'`
-            ,function(err,result){
-              if(err){
-                console.log(err)
-                reject("Error happend:", err)
-              }else if(result.length < 1){
-                reject("No have result")
-              }else if(result.length > 1){
-                reject("More than 1 result object was return")
-              }
-              resolve(result[0])
-        })
-        })
+      if(UserName == null){
+        res.sendStatus(401)
       }
-
-      let resultProductInfo = await getProductInformation()
-      console.log(resultProductInfo)
-
-      let addToCards = function(data,username){
-        return new Promise((resolve,reject) => {
-          database.query(`insert into carts(UserName,Name,Serial,Manufacturer,Price,AmountItems,TimeStamp) values ("${username}","${data.Name}","${data.Serial}","${data.Manufacturer}",${data.Price},1,"${Date.now()}")`,
-              function(err){
+      else{
+        let getProductInformation = function(){
+          return new Promise(function(resolve,reject){
+            database.query(
+              `select Name,Serial,Manufacturer,Price from products where Name = '${req.body.Name}' AND Serial = '${req.body.Serial}'`
+              ,function(err,result){
                 if(err){
                   console.log(err)
                   reject("Error happend:", err)
+                }else if(result.length < 1){
+                  reject("No have result")
+                }else if(result.length > 1){
+                  reject("More than 1 result object was return")
                 }
-                resolve(true)
+                resolve(result[0])
+            })
           })
-        })
+        }
+        let resultProductInfo = await getProductInformation()
+        console.log(resultProductInfo)
+  
+        let addToCards = function(data,username){
+          return new Promise((resolve,reject) => {
+            database.query(`insert into carts(UserName,Name,Serial,Manufacturer,Price,AmountItems,TimeStamp) values ("${username}","${data.Name}","${data.Serial}","${data.Manufacturer}",${data.Price},1,"${Date.now()}")`,
+                function(err){
+                  if(err){
+                    console.log(err)
+                    reject("Error happend:", err)
+                  }
+                  resolve(true)
+            })
+          })
+        }
+        console.log(await addToCards(resultProductInfo,UserName) == true)
+        if(await addToCards(resultProductInfo,UserName) == true){
+          res.sendStatus(201)
+        }
+        else{
+          console.log("?")
+          res.sendStatus(500)
+        }
       }
-      if(await addToCards(resultProductInfo,UserName) == true){
-        res.sendStatus(201)
-      }
-      else{
-        res.sendStatus(500)
-      }
+    }
+    else{
+      res.sendStatus(401)
     }
   })
 
@@ -272,7 +277,7 @@
       console.log(req.query.id)
 
       if(!(nameMotor == "null" || nameMotor == undefined)){
-        database.query(`select Serial from Motors where Name = \'${nameMotor}\'`,function(err,result,fields){
+        database.query(`select Serial from motors where Name = \'${nameMotor}\'`,function(err,result,fields){
           if (err){
             res.status(500).send(err)
           }
@@ -280,7 +285,7 @@
         })
       }else{
         if(req.query.id > 0 && req.query.id != undefined){
-          database.query(`select id,Serial from Serials where id = \'${req.query.id}\'`,function(err,result,fields){
+          database.query(`select id,Serial from serials where id = \'${req.query.id}\'`,function(err,result,fields){
             if (err){
               res.status(500).send(err)
             }else{
@@ -288,7 +293,7 @@
             }
           })
         }else{
-          database.query('select id,Serial from Serials',function(err,result,fields){
+          database.query('select id,Serial from serials',function(err,result,fields){
             if (err){
               res.status(500).send(err)
             }else{
@@ -301,7 +306,7 @@
 
   router.post('/serials',  async (req,res) => {
     console.log(req.body.Serial)
-    database.query(`insert into Serials(serial) values (\'${req.body.Serial}\')`,function(err,result,fields){
+    database.query(`insert into serials(serial) values (\'${req.body.Serial}\')`,function(err,result,fields){
       if (err){
       checkErrorDB(err,res)
       }else{
@@ -325,7 +330,7 @@
   })
 
   router.delete('/serials', async (req,res) =>{
-    database.query(`delete from Serials where id = '${req.query.id}'`, function(err,result,fields){
+    database.query(`delete from serials where id = '${req.query.id}'`, function(err,result,fields){
       if (err){
         console.log(err)
         res.status(500).send("Ошибка: Некорректный id")
@@ -412,8 +417,9 @@
         }
       })
     }else if(req.query.name && req.query.serial){
-      database.query(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where Name = '${req.query.name}' and Serial = '${req.query.serial}'`,function(err,result,fields){
+      let q = database.query(`select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors where Name = '${req.query.name}' and Serial = '${req.query.serial}'`,function(err,result,fields){
         if (err){
+          console.log(q)
           console.log(err)
           res.sendStatus(500)
         }
@@ -422,9 +428,10 @@
         res.send(requestData)
       })
     }else{
-      database.query('select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors',function(err,result,fields){
+      let q =database.query('select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors',function(err,result,fields){
         if (err){
           console.log(err)
+          console.log(result)
           res.sendStatus(500)
         }
         const requestData = JSON.stringify(result)
@@ -436,7 +443,8 @@
   router.post('/motors', async (req,res) =>{
     database.query(`insert into motors(Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance, PowerFactor, MultiplicityMaximum, Sliding) values (\'${req.body.Name}\',\'${req.body.Serial}\',${req.body.OperatingVoltage},${req.body.Power},${req.body.RotationSpeed},${req.body.Perfomance},${req.body.PowerFactor},${req.body.MultiplicityMaximum},${req.body.Sliding})`, function(err,result,field){
       if (err){
-        checkErrorDB(err,res)
+        console.log(err)
+        res.sendStatus(500)
       }else{
         res.sendStatus(201)
       }
@@ -474,7 +482,7 @@
   router.get('/products', async (req,res) => {
     if(req.query.id > 0 && req.query.id != undefined){
 
-      database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products where id = ${req.query.id}`,function(err,result,fields){
+      database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from products where id = ${req.query.id}`,function(err,result,fields){
         if (err){
           console.log(err)
           res.sendStatus(500)
@@ -486,7 +494,7 @@
       })
     }else{
       console.log(req.query.id)
-      database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from Products`,function(err,result,fields){
+      database.query(`select id,Name,Serial,LintToImage,Manufacturer,Description,Price from products`,function(err,result,fields){
         if (err){
           console.log(err)
           res.sendStatus(500)
@@ -504,7 +512,7 @@
     form.parse(req, function(err, fields, files){
       if(err) console.error("Oops");
 
-      database.query(`select * from Products where Name = "${fields.Name}" AND Serial = "${fields.Serial}" AND Manufacturer = "${fields.Manufacturer}"`, async (err,result) =>{
+      database.query(`select * from products where Name = "${fields.Name}" AND Serial = "${fields.Serial}" AND Manufacturer = "${fields.Manufacturer}"`, async (err,result) =>{
         if(err) console.log(err)
         if(result.length > 0){
           console.log(result.length)
@@ -522,9 +530,9 @@
           })
           fs.copyFile(
             files.file.path,
-            `${directoryToSaveImagesProductsWindows}\\${fields.Name}_${fields.Serial}.jpg`,
+            `${directoryToSaveImagesProductsWindows}/${fields.Name}_${fields.Serial}.jpg`,
             (err) => {
-              if(err) throw new Error(err)
+              if(err) console.log(err)
               console.log('file moved'.red)
             })
           }

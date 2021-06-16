@@ -1,4 +1,4 @@
-const database = require("../Internet-Shop_diploma-thesis__backend/database")
+const database = require("./database")
 
 module.exports = helpers = {
   getUserName: function(userCookie){
