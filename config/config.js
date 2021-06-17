@@ -7,9 +7,9 @@ module.exports = {
   // MySQL_database: `heroku_143dabd60105d6f`,
   // MySQL_password: `8aea0020`,
 
-  // MySQL_host: "InternetShopDiploma-db",
-  MySQL_host: "localhost",
-  MySQL_user: "admin",
+  MySQL_host: "InternetShopDiploma-db",
+  // MySQL_host: "localhost",
+  MySQL_user: "root",
   MySQL_database: `Shop`,
   MySQL_password: `qwerty12345`,
 

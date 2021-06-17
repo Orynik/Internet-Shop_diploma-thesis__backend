@@ -428,7 +428,7 @@
         res.send(requestData)
       })
     }else{
-      let q =database.query('select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors',function(err,result,fields){
+      database.query('select id,Name,Serial,OperatingVoltage,Power,RotationSpeed,Perfomance,PowerFactor, MultiplicityMaximum, Sliding from motors',function(err,result,fields){
         if (err){
           console.log(err)
           console.log(result)
@@ -519,7 +519,7 @@
           res.status(401).send("has already")
         }else{
           database.query(`Insert into products(Name,Serial,LintToImage,Manufacturer,Description,Price)
-          values ('${fields.Name}','${fields.Serial}','${URLImageServer}/${fields.Name}_${fields.Serial}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
+          values ('${fields.Name}','${fields.Serial}','${URLImageServer}${fields.Name}_${fields.Serial}.jpg','${fields.Manufacturer}','${fields.Description}',${fields.Price});`,
           function(err){
             if (err) {
               res.sendStatus(500)
@@ -545,20 +545,19 @@
     let form = new formParser.IncomingForm();
 
     form.parse(req, function(err, fields, files){
-      fs.copyFile(
-        files.file.path,
-        `${directoryToSaveImagesProductsWindows}${fields.Name}.jpg`,
-        (err) => {
-          if(err) throw err
-          console.log('file moved'.red)
-        }
-      )
-
-      console.log(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${URLImageServer}${fields.name}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`.red)
       if (err) throw new Error(err)
-      database.query(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${URLImageServer}${fields.name}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`,
-        function(err,result,fields){
+      database.query(`update products set Name = '${fields.name}', Serial = '${fields.serial}', LintToImage = '${URLImageServer}${fields.name}_${fields.serial}.jpg' ,Manufacturer = '${fields.manufacturer}',Price = ${fields.price} where id = ${fields.id}`,
+        function(err){
           if (err) throw new Error(err)
+
+          fs.copyFile(
+            files.file.path,
+            `${directoryToSaveImagesProductsWindows}/${fields.name}_${fields.serial}.jpg`,
+            (err) => {
+              if(err) throw err
+              console.log('file moved'.red)
+            }
+          )
 
           res.sendStatus(200)
         })
