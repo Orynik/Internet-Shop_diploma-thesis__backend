@@ -24,11 +24,12 @@ pool.getConnection((err, connection) => {
       if (err.code === 'ECONNREFUSED') {
           console.error('Database connection was refused.')
       }
-      if (err.code === 'ER_BAD_FIELD_ERROR'){
-          console.log("TI ebanuti??" +err)
-      }
   }
-    if (connection) return connection.release()
+    if (connection)
+    {
+        console.log("Success!")
+        return connection.release()
+    }
 })
 
 module.exports = pool
