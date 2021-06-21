@@ -193,6 +193,7 @@
   })
 
   router.post("/cart", async (req,res) => {
+    console.log(1)
     if(req.cookies['connect.sid'] != undefined){
       let UserName = await subsFunctions.getUserName(req.sessionID)
       if(UserName == null){
@@ -217,8 +218,7 @@
           })
         }
         let resultProductInfo = await getProductInformation()
-        console.log(resultProductInfo)
-  
+        console.log(resultProductInfo + Date.now())
         let addToCards = function(data,username){
           return new Promise((resolve,reject) => {
             database.query(`insert into carts(UserName,Name,Serial,Manufacturer,Price,AmountItems,TimeStamp) values ("${username}","${data.Name}","${data.Serial}","${data.Manufacturer}",${data.Price},1,"${Date.now()}")`,
@@ -231,12 +231,10 @@
             })
           })
         }
-        console.log(await addToCards(resultProductInfo,UserName) == true)
         if(await addToCards(resultProductInfo,UserName) == true){
           res.sendStatus(201)
         }
         else{
-          console.log("?")
           res.sendStatus(500)
         }
       }

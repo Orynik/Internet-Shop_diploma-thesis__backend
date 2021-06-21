@@ -10,7 +10,9 @@ module.exports = {
   MySQL_host: "InternetShopDiploma-db",
   // MySQL_host: "localhost",
   MySQL_user: "root",
+  // MySQL_user: "admin",
   MySQL_database: `Shop`,
+  // MySQL_password: `Q1qqqqqq`,
   MySQL_password: `qwerty12345`,
 
   MySQL_port_dev: 3306,
