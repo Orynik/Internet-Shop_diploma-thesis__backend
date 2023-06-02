@@ -11,7 +11,6 @@ const cookieparser = require("cookie-parser")
 const uuidKey = require("uuid")
 const MySQLStore = require("express-mysql-session")(session)
 
-const config = require('./config/config')
 const router = require('./routes/router')
 const database = require('./database')
 
